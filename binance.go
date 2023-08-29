@@ -1,11 +1,13 @@
 package main
 
 import (
-	"go.uber.org/zap"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"test/websocket_client"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -19,18 +21,26 @@ func main() {
 		url,
 		logger,
 		websocketclient.WithSendQueueSize(2),
-		websocketclient.WithOnConnected(func() {
-			logger.Info("connected to websocket")
-		}),
-		websocketclient.WithErrorHandler(func(err error) {
-			logger.Error("error", zap.Error(err))
-		}),
+		websocketclient.WithOnConnected(
+			func() {
+				logger.Info("connected to websocket")
+			},
+		),
+		websocketclient.WithErrorHandler(
+			func(err error) {
+				logger.Error("error", zap.Error(err))
+			},
+		),
 	)
+	err = client.Send([]byte("btc"))
+	fmt.Println(err)
 	err = client.Connect()
 	if err != nil {
 		logger.Error("error ", zap.Error(err))
 		return
 	}
+
+	err = client.Send([]byte("btc"))
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
